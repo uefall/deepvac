@@ -12,6 +12,7 @@ import torch.distributed as dist
 from torch.utils.data import DataLoader
 from torch.cuda.amp import autocast
 from torch.cuda.amp import GradScaler
+import pdb
 
 try:
     from torch.utils.tensorboard import SummaryWriter
@@ -165,6 +166,12 @@ class Deepvac(object):
         if self.config.model_reinterpret_cast:
             self.config.state_dict = self.castStateDict(self.config.state_dict, self.config)
             
+        if self.config.ignore_extra:
+            model_dict = self.config.net.state_dict()
+
+            self.config.state_dict = {k: v for k, v in self.config.state_dict.items() if k in model_dict and model_dict[k].shape == self.config.state_dict[k].shape}
+            LOG.logI("You enabled config.core.{}.ignore_extra in config.py, omit extra or mismatch shape parameters in model.".format(self.name()))
+
         self.config.net.load_state_dict(self.config.state_dict, strict=False)
 
     def loadJitModel(self):
@@ -542,7 +549,7 @@ class DeepvacTrain(Deepvac):
         #context for export 3rd
         LOG.logI("preparing save model with timefix: {}".format(current_time))
         with torch.no_grad(), deepvac_val_mode(self.config):
-            file_partial_name = '{}__acc_{}__epoch_{}__step_{}__lr_{}'.format(current_time, self.config.acc, self.config.epoch, self.config.step, self.config.optimizer.param_groups[0]['lr'])
+            file_partial_name = '{}__acc_{:.4f}__epoch_{}__step_{}__lr_{:.3f}'.format(current_time, self.config.acc, self.config.epoch, self.config.step, self.config.optimizer.param_groups[0]['lr'])
             state_file = '{}/model__{}.pth'.format(self.config.output_dir, file_partial_name)
             checkpoint_file = '{}/checkpoint__{}.pth'.format(self.config.output_dir, file_partial_name)
 
