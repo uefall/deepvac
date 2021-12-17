@@ -549,7 +549,7 @@ class DeepvacTrain(Deepvac):
         #context for export 3rd
         LOG.logI("preparing save model with timefix: {}".format(current_time))
         with torch.no_grad(), deepvac_val_mode(self.config):
-            file_partial_name = '{}__acc_{:.4f}__epoch_{}__step_{}__lr_{:.3f}'.format(current_time, self.config.acc, self.config.epoch, self.config.step, self.config.optimizer.param_groups[0]['lr'])
+            file_partial_name = '{}__acc_{:.4f}__epoch_{}__step_{}__lr_{:.3e}'.format(current_time, self.config.acc, self.config.epoch, self.config.step, self.config.optimizer.param_groups[0]['lr'])
             state_file = '{}/model__{}.pth'.format(self.config.output_dir, file_partial_name)
             checkpoint_file = '{}/checkpoint__{}.pth'.format(self.config.output_dir, file_partial_name)
 
@@ -606,7 +606,7 @@ class DeepvacTrain(Deepvac):
         self.config.acc = 0
         LOG.logW("You should reimplement doValAcc() to assign acc value to self.config.acc in your subclass {}.".format(self.name()))
 
-    def train(self):
+    def train(self):                                # train epoch
         self.config.net.train()
         self.initStepAndSaveNumber()
         self.initTickTock()
